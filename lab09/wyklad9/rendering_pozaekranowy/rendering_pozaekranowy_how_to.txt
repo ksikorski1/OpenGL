@@ -1,0 +1,79 @@
+// --------------------------------------------------
+// Rendering pozaekranowy do tekstury
+// --------------------------------------------------
+
+
+// --------------------------------------------------
+// INICJALIZACJA
+
+// Identyfikatory buforow
+GLuint FrameBufferID;
+GLuint DepthBufferID;
+GLuint TextureBuffer;
+
+
+// --------------------------------------------------
+// 1. Stworzenie tekstury do ktorej odbedzie sie rendering
+
+glGenTextures(1, &TextureBuffer);
+glBindTexture(GL_TEXTURE_2D, TextureBuffer);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window_Width, Window_Height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+// --------------------------------------------------
+// 2. Stworzenie obiektu bufora ramki, ktory zawiera bufor koloru
+
+glGenFramebuffers(1, &FrameBufferID);
+glBindFramebuffer(GL_FRAMEBUFFER, FrameBufferID);
+
+// Polaczenie tekstury do skladowej koloru bufora ramki
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, TextureBuffer, 0);
+
+// --------------------------------------------------
+// 3. Stworzenie obiektu render-buffer dla testu glebokosci
+
+glGenRenderbuffers(1, &DepthBufferID);
+glBindRenderbuffer(GL_RENDERBUFFER, DepthBufferID);
+glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, Window_Width, Window_Height);
+glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+// Polaczenie bufora glebokosci z aktualnym obiektem bufora ramki
+glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBufferID);
+
+// --------------------------------------------------
+// 4. Sprawdzenie czy pomyslnie zostal utworzony obiekt bufora ramki
+// i powrot do domyslnego bufora ramki
+
+if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	printf("Error: Framebuffer is not complete!\n");
+	exit(1);
+}
+
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+// --------------------------------------------------
+// RENDEROWANIE SCENY
+
+// 1. Renderowanie sceny do tekstury 
+// Pamietajmy o ustaleniu wymiarow bufora zgodnymi z wymiarami
+// tekstury do ktorej jest renderowana scena
+
+glViewport(0, 0, Window_Width, Window_Height);
+glBindFramebuffer(GL_FRAMEBUFFER, FrameBufferID);
+glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	DrawScene_to_texture();
+
+
+// 2. Renderowanie sceny na ekran
+
+glViewport(0, 0, Window_Width, Window_Height);
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+
+	DrawScene_on_screen();
+

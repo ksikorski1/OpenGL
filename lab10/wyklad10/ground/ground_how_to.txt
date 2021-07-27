@@ -1,0 +1,63 @@
+// --------------------------------------------------------
+// Implementacja podloza i obiektu poruszajacego sie po nim
+// --------------------------------------------------------
+
+W skrocie:
+
+1. Stworzymy klase CTriangle do przechowywania trojkatow i 
+obliczania wysokosci obiektu znajdujacego sie nad wybranym 
+trojkatem.
+
+2. Stworzymy klase CGround, ktora bedzie przechowywala zbior
+wszystkich trojkatow skladajacych sie na podloze.
+
+3. Stworzymy klase CSceneObject do reprezentacji obiektu, 
+ktorym bedziemy poruszali sie po scenie i po plaszczyznie
+zdefiniowanej za pomoca klasy CGround.
+
+
+Pliki:
+ground.h - zawierajacy klasy CTriangle i CGround
+object.h - zawierajacy klase CSceneObject
+// --------------------------------------------------------
+
+// --------------------------------------------------------
+// Kroki:
+// --------------------------------------------------------
+
+1. Potrzebujemy co najmniej dwoch obiektow na scenie:
+(a) podloza, ktore wczytujemy np. z pliku OBJ
+(b) postaci, ktora bedziemy sie poruszali po scenie
+
+
+CGround myGround;
+CSceneObject myCharacter;
+
+// --------------------------------------------------------
+2. Inicjalizacja obiektu podłoża,
+   podajemy wektor punktow, ktore tworza kolejne trojkaty.
+
+myGround.CreateFromOBJ(OBJ_vertices[SCENE]);
+
+// --------------------------------------------------------
+3. Inicjalizacja obiektu postaci
+   Ustawiamy VAO, rozmiar oraz wskaznik do obiektu podloza
+   po ktorym bedzie sie poruszal obiekt
+
+
+myCharacter.Init(vArray[SPHERE], OBJ_vertices[SPHERE].size(), &myGround);
+myCharacter.SetPosition(0, 0, 0);
+
+// --------------------------------------------------------
+4. Poruszanianie sie postacia za pomoca klawiszy WSAD
+
+float mov_vec = 0.2f;
+myCharacter.MoveXZ(move_vec, 0.0f);
+
+
+// --------------------------------------------------------
+5. Renderowanie obiektu postaci
+
+myCharacter.Draw();
+
+

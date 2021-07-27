@@ -1,0 +1,47 @@
+//-----------------------------------------------------------------
+// Selekcja obiektow - obliczanie glebokosci piksela (+ rzutowanie wsteczne)
+// ----------------------------------------------------------------
+
+
+Zalozenia:
+- mamy wiele obiektow na scenie, ktore mozna zaznaczyc
+- obliczony zostanie punkt 3D we wspolrzednych sceny dzieki rzutowaniu wstecznemu
+
+
+Zastosowania:
+- obiekty proste geometrycznie (np. sfery, prostopadłościany)
+
+
+Kroki:
+
+1. Odczytywanie wartosci z bufora glebokosci wybranego piksela
+2. Rzutowanie wsteczne - obliczanie wspolrzednych wybranego piksela
+w ukladzie wspolrzednych sceny   
+3. Majac punkt we wspolrzednych sceny mozemy znalezc najblizszy
+obiekt, ktory mozna uznac jako "zaznaczony" lub w inny geometryczny 
+sposob przeprowadzic detekcje selekecji (np. przez wykrycie kolizji 
+punktu ze sfera itp.)
+
+
+
+void MouseButton( int button, int state, int winX, int winY )
+{
+
+	if ( state == GLUT_DOWN )
+	{
+		
+		// Krok 1. obliczanie glebokosci piksela
+		float winZ;
+		glReadPixels( winX, Window_height-winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+		
+		// Krok 2. rzutowanie wsteczne
+        glm::vec3 point = glm::unProject(glm::vec3(winX, Window_height-winY, winZ), matView, matProj, glm::vec4(0,0, Window_width, Window_height));
+
+		// Krok 3. wyszukanie obiektu kolizyjnego
+        for (int i=0; i<NUMBER_OF_OBJECTS; ++i)
+        {
+			// jesli point koliduje z obiektem i-tym to ...
+			
+		}
+	}
+}

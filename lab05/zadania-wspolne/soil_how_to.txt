@@ -1,0 +1,66 @@
+// ---------------------------------------
+// Uzycie SOIL
+
+0. Zakladam ze juz mamy biblioteke w systemie
+
+Tak jak z poprzednimi bibliotekami. Wrzucamy pliki
+naglowkowe do include, pliki linkera do lib itd.
+
+1. Dopisanie plikow naglowkowych (NOWE)
+
+	#include <GL/SOIL.h>
+
+
+2. Tworzenie tekstury jak poprzednio
+
+	glGenTextures(1, &TextureID);
+	glBindTexture(GL_TEXTURE_2D, TextureID);
+
+
+3. Ladowanie danych z pliku graficznego  (NOWE)
+
+Uwaga: Format JPG tylko w wersji nieprogresywnej, reszta powinna normalnie dzialac
+Mozna zawsze otworzyc plik jpg ktory nie dziala i zapisac go raz jeszcze w 
+programie graficznym bez zaznaczania opcji progressive (progressive browser 
+display lub podobnie)
+
+
+	int width, height;
+	unsigned char* image;
+
+	image = SOIL_load_image("texture1.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+
+4. Dalej juz standardowo, przerzucenie danych do opengla i ustawienie parametrow tekstury
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+5. Dobra praktyka: zwolnienie pamieci z obrazu, ktory jest juz niepotrzebny, 
+obraz zostal skopiowany do pamieci zarzadzanej przez opengl.
+
+	SOIL_free_image_data(image);	
+
+
+6. Podczas wyswietlania jak poprzednio
+
+	// Wlaczanie/aktywowanie tekstur
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, TextureID);
+
+	// Ustawianie tzw. samplerow zwiazanych z teksturami
+	// Pamietajmy, aby ustawiajac zmienna uniform miec aktywny
+	// program OpenGLa idProgram
+
+	glUniform1i(glGetUniformLocation(idProgram, "tex0"), 0);
+
+	// Generowanie obiektow na ekranie
+	glDrawArrays, glDrawElements itp.
+
+
+7. Podczas kompilacji pamietajmy o dolaczeniu SOIL parametrem -lSOIL
+lub podobnie (w zaleznosci od systemu operacyjnego)

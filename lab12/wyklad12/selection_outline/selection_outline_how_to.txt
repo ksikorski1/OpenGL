@@ -1,0 +1,90 @@
+//-----------------------------------------------------------------
+// Object outlining za pomocą bufora szablonowego
+// ----------------------------------------------------------------
+
+Cel:
+
+Wyrenderowanie obramowania (otoczki) obiektu trojwymiarowego za pomocą 
+wyrenderowania takiego samego obiektu powiekszonego o pewien wspolczynnik
+ale tak, aby powiekszony obiekt nie przyslanial obiektu oryginalnego.
+
+
+Mozna do tego celu uzyc skalowania jesli obiekt jest wypukly lub powiekszania
+obiektu wzgledem wektorow normalnych jego wierzcholkow (jesli wektory normalne
+odzwierciedlaja cieniowanie gladki).
+
+
+Idea:
+
+(a) Narysowanie obiektu oryginalnego oraz w tym samym czasie zapisanie do 
+bufora szablonowego niezerowej wartosci (np. wartosci 1). 
+
+(b) Przeskalowanie obiektu oryginalnego 
+
+(c) Wyrenderowanie obiektu przeskalowanego jedynie tam, gdzie bufor szablonowy
+nie ma wartosci ustalonej w podpunkcie (a). W ten sposob nie przyslonimy obiektu
+oryginalnego.
+
+
+
+
+
+Kroki:
+
+1. Inicjalizacja STENCIL buffera we freeGLUT
+
+	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL );
+
+	glEnable( GL_STENCIL_TEST );
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glStencilFunc(GL_ALWAYS, 0, 0xFF);
+	// wylaczenie zapisywania do stencil buffera
+    glStencilMask(0x00);
+	
+2. Wyczyszczenie bufora testowania (oraz innych przy okazji)
+   Dla kazdej klatki renderingu
+
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+
+3. Rysujac obiekt oryginalny
+   
+	// wlaczenie zapisywania do stencil buffera
+	glStencilMask(0xFF);
+	// wpisanie 1 do stencil buffera tam, gdzie wyrenderowany bedzie obiekt oryginalny
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
+	Object->Render();
+	
+	// wylaczenie zapisywania
+	glStencilMask(0x00);
+	
+	
+4. Przeskalowanie obiektu i wyrenderowanie z testem szablonowym
+
+	// np. dodanie skalowania do macierzy modelu
+	...
+	glm::scale ...
+	
+	
+	// Ustwianie funkcji testujacej
+	// Obiekt bedzie rysowany tylko tam, gdzie stencil buffer nie jest rowny 1
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	
+	// wyrenderowanie obiektu przeskalowanego
+	Object->Rener();
+	
+	// wylaczenie zapisywania
+	glStencilMask(0xFF);
+	// ustawianie funkcji testujacej
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+	
+ 
+5. Mozna poeksperymentowac z wylaceniem testu glebokosci na czas rysowania 
+   obiektu przeskalowanego
+   
+   
+   glDisable( GL_DEPTH_TEST );
+   
+   // rendering obiektu przeskalowanego
+   
+   glEnable( GL_DEPTH_TEST );

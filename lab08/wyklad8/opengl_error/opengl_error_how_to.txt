@@ -1,0 +1,26 @@
+// ----------------------------------
+// Prosta obsluga bledow w OpenGL
+// ----------------------------------
+
+GLenum errCode;
+const GLubyte *errString;
+
+if ((errCode = glGetError()) != GL_NO_ERROR)
+{
+	errString = gluErrorString(errCode);
+	printf("OpenGL Error (%d): %s\n", errCode, errString);
+}
+
+// ----------------------------------
+// Makro do wypisywania bledow
+// ----------------------------------
+
+#define __CHECK_FOR_ERRORS 	{GLenum errCode; if ((errCode = glGetError()) != GL_NO_ERROR) printf("Error (%d): %s in file %s at line %d !\n", errCode, gluErrorString(errCode), __FILE__,  __LINE__);}
+
+Wywolujac w dowowolnym miejscu w kodzie
+
+__CHECK_FOR_ERRORS
+
+jesli OpenGL zglasza blad to zostanie on wypisany 
+wraz z podaniem nazwy pliku oraz linii.
+

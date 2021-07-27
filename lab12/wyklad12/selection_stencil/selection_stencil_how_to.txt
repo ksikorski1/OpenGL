@@ -1,0 +1,74 @@
+//-----------------------------------------------------------------
+// Selekcja obiektow - uzycie bufora szablonowego STENCIL BUFFER
+// ----------------------------------------------------------------
+
+
+Zalozenia:
+- mamy wiele obiektow na scenie, ktore mozna zaznaczyc
+- wykorzystany zostanie dodatkowy bufor (bufor testowania STENCIL BUFFER),
+ktory dla kazdego fragmentu obrazu bedzie przechowywal identyfikator obiektu
+
+
+Zastosowania:
+- obiekty dowolnie zlozone
+- ograniczona ilosc obiektow (2^8)
+
+Zalozenie o malej ilosci obiektow mozna rozwiazac przez rendering pozaekranowy.
+Wtedy identyfikator obiektu bedzie przechowywany np. w buforze glebokosci lub koloru
+co pozwoli wskazac 2^24 roznych obiektow.
+
+
+Kroki:
+
+1. Inicjalizacja STENCIL buffera
+
+	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL );
+
+	glEnable( GL_STENCIL_TEST );
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+2. Wyczyszczenie bufora testowania (oraz innych przy okazji)
+   Dla kazdej klatki renderingu
+
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+
+3. W petli rysujacej N-obiektow:
+   
+   Rysujac i-ty obiekt:
+   wpisujemy do STENCIL buffera wartosc i (ew. i+1 jesli numerujemy od 0, aby odroznic 0)
+ 
+	przykladowy kod nizej
+	
+ 
+4. Podczas klikniecia mysza we wspolrzednych ekranu, odczytywana jest wartosc STENCIL 
+   buffera, ktory zawiera identyfikator obiektu 
+
+	int obj_index;
+	glReadPixels( x, Window_height-y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &obj_index);
+	
+	printf("Selected object id=%d \n", obj_index);
+	
+	
+	 
+	
+	
+// --------------------------------------------------------------
+Krok 3: Petla rysujaca obiekty:
+// --------------------------------------------------------------
+
+
+// Rysowanie obiektow NIE-selekcyjnych (identyfikator 0) 
+glStencilFunc(GL_ALWAYS, 0 , 0xFF);
+
+...
+
+// Rysowanie obiektow selekcyjnych (od 1 do NUMBER_OF_OBJECTS)
+
+for (int i=1; i<NUMBER_OF_OBJECTS; ++i)
+{
+	glStencilFunc(GL_ALWAYS, i, 0xFF);
+	
+	// rysowanie i-tego obiektu
+	
+}
+		

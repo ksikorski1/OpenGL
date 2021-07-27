@@ -1,0 +1,73 @@
+// ----------------------------------------------------------
+// KROK 1. Stworz tablice niezaleznych wierzcholkow
+GLfloat triangles_coord[2*6] =
+{
+	-0.5f, -1.0f,
+	 0.5f, -1.0f,
+	 1.0f,  0.0f,
+	 0.5f,  1.0f,
+	-0.5f,  1.0f,
+	-1.0f,  0.0f
+};
+
+// ----------------------------------------------------------
+// KROK 1.5 (opcjonalny) Dodaj inne atrybuty jak np. kolor
+GLfloat triangles_color[3*6] =
+{
+	1.f, 0.f, 0.f,
+	0.f, 1.f, 0.f,
+	0.f, 0.f, 1.f,
+	1.f, 1.f, 0.f,
+	0.f, 1.f, 1.f,
+	1.f, 0.f, 1.f
+};
+
+// ----------------------------------------------------------
+// KROK 2. Stworz tablice indeksow tworzacych trojkaty
+// z wierzcholkow z tablicy triangles_coord
+GLuint triangles_indices[3*4] =
+{
+	0, 1, 2,
+	0, 2, 3,
+	0, 3, 4,
+	0, 4, 5
+};
+
+// ----------------------------------------------------------
+// KROK 3. Stworz VAO oraz bufory na wszystkie atrybuty
+// oraz na tablice indeksów
+
+// VAO
+glGenVertexArrays( 1, &vArray );
+glBindVertexArray( vArray );
+
+// BUFOR: Wspolrzedne wierzcholkow
+
+glGenBuffers( 1, &vBuffer_coord );
+glBindBuffer( GL_ARRAY_BUFFER, vBuffer_coord );
+glBufferData( GL_ARRAY_BUFFER, sizeof( triangles_coord ), triangles_coord, GL_STATIC_DRAW );
+
+glVertexAttribPointer( POSITION, 2, GL_FLOAT, GL_FALSE, 0, NULL );
+glEnableVertexAttribArray( POSITION );
+
+// BUFOR: Kolor wierzcholkow
+
+glGenBuffers( 1, &vBuffer_color );
+glBindBuffer( GL_ARRAY_BUFFER, vBuffer_color  );
+glBufferData( GL_ARRAY_BUFFER, sizeof( triangles_color ), triangles_color, GL_STATIC_DRAW );
+
+glVertexAttribPointer( COLOR, 3, GL_FLOAT, GL_FALSE, 0, NULL );
+glEnableVertexAttribArray( COLOR );
+
+// BUFOR: Indeksy wierzcholkow
+
+glGenBuffers( 1, &vBuffer_indices );
+glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vBuffer_indices );
+glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( triangles_indices ), triangles_indices, GL_STATIC_DRAW );
+
+
+// ----------------------------------------------------------
+// KROK 4. Narysuj na ekranie obiekty za pomoca tablicy wierzcholkow
+
+glDrawElements( GL_TRIANGLES, 4 * 3, GL_UNSIGNED_INT, NULL );
+

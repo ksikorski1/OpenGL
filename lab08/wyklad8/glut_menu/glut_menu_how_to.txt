@@ -1,0 +1,52 @@
+// ----------------------------------
+// Tworzenie menu w GLUT
+// ----------------------------------
+
+1. Tworzymy funkcje, ktora bedzie przetwarzala 
+   wywolanie menu:
+
+void Menu( int value )
+{
+    switch( value )
+    {
+	case 1:
+		printf("Wybrano opcja nr jeden\n")	;
+		break;
+		
+	case 2:
+		printf("Wybrano opcje nr dwa\n")	;
+		break;
+	
+	default:
+		printf("Wybrano %d \n", value);
+    }
+}
+
+
+// ----------------------------------
+2. Tworzenie struktury menu
+// ----------------------------------
+
+// Najpierw tworzymy podmenu
+int podmenuA = glutCreateMenu( Menu );
+glutAddMenuEntry( "Pozycja 1", 1 );
+glutAddMenuEntry( "Pozycja 2", 2 );
+
+// Kolejne podmenu
+int podmenuB = glutCreateMenu( Menu );
+glutAddMenuEntry( "Pozycja 3", 3 );
+glutAddMenuEntry( "Pozycja 4", 4 );
+
+// Na koniec utworzenie glownego menu
+glutCreateMenu( Menu );
+glutAddMenuEntry( "Pozycja 5", 5 );
+glutAddSubMenu( "Podmenu A", podmenuA );
+glutAddSubMenu( "Podmenu B", podmenuB );
+
+
+// ----------------------------------
+3. Podlaczenie menu pod odpowiedni klawisz myszy
+// ----------------------------------
+
+// GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, GLUT_RIGHT_BUTTON.
+glutAttachMenu( GLUT_RIGHT_BUTTON );

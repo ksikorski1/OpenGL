@@ -1,0 +1,122 @@
+// -----------------------------------------------
+// Environment Map
+// -----------------------------------------------
+
+Problem: zaimplementować OBIEKT na scenie, który będzie przezroczysty 
+i/lub odbijał światło otoczenia (reflection/refraction).
+
+// -----------------------------------------------
+// Przykład rozwiązania
+// -----------------------------------------------
+
+Rendering sceny będzie przebiegał w dwóch przejsiach:
+
+(1) Rendering pozaekranowy do tekstury CubeMap z punktu widzenia OBIEKTu 
+na scene w 6 kierunkach (prawa, lewa, góra, doł, przód, tył)
+
+(2) Rendering finalny całej sceny z punktu widzenia kamery, w którym
+obliczona tekstura z kroku (1) będzie użyta do obliczenia 
+odbicia/przezroczystości OBIEKTu
+
+
+Szczegóły:
+
+Etap (1) 
+
+1.1 Tworzymy teksturę CubeMap, do której będziemy renderowali pozaekranowo
+
+1.2 Tworzymy framebuffer z buforem koloru i głębokości i łączymy z teksturą z 1.1
+
+1.3 Renderujemy z pozycji OBIEKTu do framebuffera z punktu 1.2, a wynik 
+przechowywany bedzie w teksturze.
+Proces identyczny do tego, ktory generuje mape cieni swiatla punktowego. 
+Normalnie trzeba byłoby wykonać 6 oddzielnych renderingów (do każdej 
+ściany CubeMapy) ale można wykorzystując shader geometrii wykonać taką 
+mapę w jednym przejściu.
+
+Przykladowe pliki shadera w tym samym katalogu.
+
+
+Etap (2)
+
+2.1 Renderujemy standardowo naszą scenę i dodatkowo umieszczamy teksturę z 
+Etapu 1 pod dodatkowy slot
+
+2.2 Renderujac OBIEKT korzystamy z tekstury z Etapu 1 do obliczenia efektu 
+reflection/refraction.
+
+
+// -----------------------------------------------
+// Przykładowe fragmenty kodu
+// -----------------------------------------------
+
+
+// Etap 1.1 i 1.2
+
+// 1. Tekstura do skladowej koloru framebuffera
+GLuint TextureID;
+glGenTextures(1, &TextureID);
+glBindTexture(GL_TEXTURE_CUBE_MAP, TextureID);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+for (int i = 0; i < 6; ++i)
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, FrameBufferWidth,
+		FrameBufferHeight, 0, GL_RGB, GL_FLOAT, NULL);
+
+// 2. Tesktura do składowej głębokości framebuffera
+GLuint TextureDepthID;
+glGenTextures(1, &TextureDepthID);
+glBindTexture(GL_TEXTURE_CUBE_MAP, TextureDepthID);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+for (int i = 0; i < 6; ++i)
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24, 
+		FrameBufferWidth, FrameBufferHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+// 3. Framebuffer ze składową color i depth
+GLuint FrameBufferID;
+glGenFramebuffers(1, &FrameBufferID);
+glBindFramebuffer(GL_FRAMEBUFFER, FrameBufferID);
+glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TextureID, 0);
+glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, TextureDepthID, 0);
+glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+// 4. Powrot do domyslnego bufora ramki
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+// Etap 1.3
+
+glViewport(0, 0, FrameBufferWidth, FrameBufferHeight);
+glBindFramebuffer(GL_FRAMEBUFFER, FrameBufferID);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+// Przekazanie macierzy rzutowania do shaderow
+// wykonywane jedynie wtedy, gdy zmieniamy polozenie OBIEKTu
+
+glm::vec3 Position = POZYCJA_OBIEKTU;
+glm::mat4 matProj = glm::perspective(glm::radians(90.0f), Width/(float)Height, 0.5f, 50.0f);
+glm::mat4 matPVArray[6];
+	
+matPVArray[0] = matProj * glm::lookAt(Position, Position + glm::vec3( 1.0, 0.0, 0.0), glm::vec3(0.0,-1.0, 0.0));
+matPVArray[1] = matProj * glm::lookAt(Position, Position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0,-1.0, 0.0));
+matPVArray[2] = matProj * glm::lookAt(Position, Position + glm::vec3( 0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
+matPVArray[3] = matProj * glm::lookAt(Position, Position + glm::vec3( 0.0,-1.0, 0.0), glm::vec3(0.0, 0.0,-1.0));
+matPVArray[4] = matProj * glm::lookAt(Position, Position + glm::vec3( 0.0, 0.0, 1.0), glm::vec3(0.0,-1.0, 0.0));
+matPVArray[5] = matProj * glm::lookAt(Position, Position + glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0,-1.0, 0.0));
+
+Shader->Send(matPVArray[0], matPVArray[1], ..., matPVArray[5]);
+
+// -----------------------
+// RENDERING OBIEKTOW do environment mapy
+// -----------------------
+

@@ -1,0 +1,44 @@
+// --------------------------------------
+// ANISOTROPY 
+// --------------------------------------
+
+// --------------------------------------
+// KROK 1 (Inicjalizacja). Pobranie maksymalnego stopnia anizotropii
+// --------------------------------------
+
+GLfloat maxAnisotropy = -1.0f;
+bool Anisotropy = false;
+
+glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy );
+
+if( glGetError() != GL_NO_ERROR )
+{
+	printf("Error: GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT;\n");
+	maxAnisotropy = -1.0;
+}
+else
+{
+	printf("Max Anisotropy: %f\n", maxAnisotropy);
+}
+
+// --------------------------------------
+// KROK 2 Ustawienie stopnia anizotropii
+// --------------------------------------
+
+Mozna dokonac raz podczas ustawienia parametrow 
+danej tekstury (TextureID) lub tak jak w przykladzie
+zmieniany jest ten poziom w trakcie dzialania
+aplikacji (w celu demonstracji roznych ustawien)
+
+
+glBindTexture(GL_TEXTURE_2D, TextureID);
+
+if( maxAnisotropy > 0.0f )
+{
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (Anisotropy == true)?maxAnisotropy:1.0f );
+}
+
+
+
+glUniform1i(glGetUniformLocation(program, "tex0"), 0);
+glDrawArrays( GL_TRIANGLES, 0, 3*3 );

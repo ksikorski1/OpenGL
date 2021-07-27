@@ -1,0 +1,110 @@
+// ----------------------------------------------------
+// KROK 1. Tworzenie tekstury (+ ladowanie z pliku BMP)
+// ----------------------------------------------------
+
+// 0. Bedziemy korzystac z gotowej funkcji do wczytywania
+// plikow bmp, dlatego dolaczamy plik:
+
+#include "texture_loader.hpp"
+
+
+// 1. Wczytanie danych z pliku BMP
+int tex_width;
+int tex_height;
+unsigned char *tex_data;
+
+// gotowa funkcja z pliku texture_loader.hpp
+loadBMP_custom("plik.bmp", tex_width, tex_height, &tex_data);
+
+
+// 2. Generowanie identyfikatora i ustawianie jako aktualnej tekstury
+glGenTextures(1, &TextureID);
+glBindTexture(GL_TEXTURE_2D, TextureID);
+
+// 3. Przekazanie danych tekstury
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_BGR, GL_UNSIGNED_BYTE, tex_data);
+
+// 4. Automatyczne tworzenie mipmap
+glGenerateMipmap(GL_TEXTURE_2D);
+
+// Podstawowy level mipmap (default 0)
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+
+
+// 5. Ustawianie parametrow tekstury
+
+// (a) Zachowanie tekstury gdy wspolrzedne UV wyjda poza zakres (0-1)
+
+// GL_REPEAT, GL_MIRRORED_REPEAT, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// W przypadku, gdy wybrano GL_CLAMP_TO_BORDER
+	//float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	//glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+
+
+// (b) Zachowanie tekstury gdy ma byc powiekszona
+
+// GL_LINEAR, GL_NEAREST
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+// (c) Zachowanie tekstury gdy ma byc pomniejszona
+
+// GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_NEAREST,
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+
+
+// ---------------------------------------------------------------------------
+// KROK 2. Tworzenie bufora na wspolrzedne UV (podobnie jak poprzednie bufory)
+// ---------------------------------------------------------------------------
+
+glGenBuffers( 1, &idVBO_uv );
+
+glBindBuffer( GL_ARRAY_BUFFER, idVBO_uv );
+glBufferData( GL_ARRAY_BUFFER, ilosc_danych, wskaznik, GL_STATIC_DRAW );
+
+glVertexAttribPointer( NR_ATRYBUTY, 2, GL_FLOAT, GL_FALSE, 0, NULL );
+glEnableVertexAttribArray( NR_ATRYBUTU );
+
+
+
+// --------------------------------------------------------------
+// KROK 3. Aktywowanie tekstury i przekazanie do potoku OpenGLa
+// --------------------------------------------------------------
+
+// 1. Wlaczanie/aktywowanie tekstur
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, TextureID);
+
+
+// 2. Przekazanie identyfikatora samplera tekstury
+// w przypadku jednej tekstury jest to opcjonalne
+glUniform1i(glGetUniformLocation(program, "tex0"), 0);
+
+
+// -------------------------------------------------
+// KROK 4. Obsluga samplera w shaderze fragmentów
+// -------------------------------------------------
+
+#version 150
+
+// odebrane UVki z vertex shadera i przekazane tutaj
+in vec2 inoutUV;
+
+// specjalny typ danych dla tekstury 2D
+uniform sampler2D tex0;
+
+
+out vec4 outColor;
+
+void main()
+{
+
+	// funkcja texture (id_tekstury, wspolrzedne_uv)
+	// pobiera kolor fragmentu z id_textury o podanych wspolrzednych 
+	
+	outColor = texture( tex0, inoutUV );
+
+}
+

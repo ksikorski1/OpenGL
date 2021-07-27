@@ -1,0 +1,94 @@
+// --------------------------------------------
+// Oswietlenie statyczne model Phong uproszczony bez
+// skladowej Specular
+// --------------------------------------------
+
+
+
+// --------------------------------------------
+// 1. Ustalenie parametrow oswietlenia
+
+glm::vec3 Light_Ambient = glm::vec3(0.2, 0.2, 0.2);
+glm::vec3 Light_Diffuse = glm::vec3(1.0, 1.0, 1.0);
+glm::vec3 Light_Position = glm::vec3(0.0, 1.0, -3.0);
+
+// --------------------------------------------
+// 2. Przekazanie tych parametrow jako zmienne uniform
+
+glUniform3fv( glGetUniformLocation( program, "Light_Ambient" ), 1, &Light_Ambient[0] );
+glUniform3fv( glGetUniformLocation( program, "Light_Diffuse" ), 1, &Light_Diffuse[0] );
+glUniform3fv( glGetUniformLocation( program, "Light_Position" ), 1, &Light_Position[0] );
+
+
+
+
+// --------------------------------------------
+// 3. Shader wierzcholkow
+
+//Zadbajmy o to, aby przekazywany byl wektor normalny oraz wspolrzedne
+//wierzcholka do shadera fragmentow
+
+
+#version 330 core
+
+layout( location = 0 ) in vec4 inPosition;
+layout( location = 1 ) in vec3 inNormal;
+
+out vec4 ourPosition;
+out vec3 ourNormal;
+
+uniform mat4 Matrix_proj_mv;
+
+void main()
+{
+	gl_Position = Matrix_proj_mv * inPosition;
+
+	ourPosition = inPosition;
+	ourNormal = inNormal;
+
+}
+
+
+// --------------------------------------------
+// 4. Shader fragmentow
+
+
+#version 150 core
+
+in vec4 ourPosition;
+in vec3 ourNormal;
+
+out vec4 outColor;
+
+
+// Parametry oswietlenia
+uniform vec3 Light_Ambient;
+uniform vec3 Light_Diffuse;
+uniform vec3 Light_Position;
+
+
+void main()
+{
+
+	// ustawienie domyslnego koloru fragmentu
+	// mozna tutaj uwzglednic tekstury i inne parametry
+	vec3 objectColor = vec3(0.2, 0.8, 0.2);
+
+	// Obliczenie wektora (swiatlo - wierzcholek)
+	// czyli kierunku padania swiatla na wierzcholek
+
+	vec3 lightDirection = normalize(Light_Position - vec3(ourPosition));
+
+	// obliczenie kata pomiedzy wektorem lightDir oraz wektorem normalnym
+	// wartosc kata okresla pod jakim katem padaja promienie
+	float lightCoeff = max(dot(ourNormal, lightDirection), 0.0);
+
+	// obliczenie skladowej diffuse
+	vec3 resultDiffuse = lightCoeff * Light_Diffuse;
+
+	// Zastosowanie oswietlenia do fragmentu
+	vec3 result = (Light_Ambient + resultDiffuse) * objectColor;
+
+	outColor = vec4(result, 1.0);
+
+}
